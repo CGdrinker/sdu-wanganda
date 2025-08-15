@@ -144,7 +144,7 @@ $d = \frac{s_1 k - e_1}{r} \pmod{n}$
 
 *   实现高效倍点算法，通过二进制展开减少点加次数。
 
-1.  **性能对比**：对比优化前后点乘运算的时间开销，验证优化效果。
+  **性能对比**：对比优化前后点乘运算的时间开销，验证优化效果。
 
 ### 3.2 SM2 签名误用场景验证
 
@@ -160,7 +160,7 @@ $d = \frac{s_1 k - e_1}{r} \pmod{n}$
 
 *   基于签名方程推导私钥，验证泄露结果。
 
-1.  **验证方式**：对比推导私钥与真实私钥，检查一致性。
+  **验证方式**：对比推导私钥与真实私钥，检查一致性。
 
 ### 3.3 ECDSA 签名伪造实验
 
@@ -176,7 +176,7 @@ $d = \frac{s_1 k - e_1}{r} \pmod{n}$
 
 *   使用恢复的私钥伪造新签名，验证其有效性。
 
-1.  **结果验证**：检查伪造签名是否通过公钥验证。
+ **结果验证**：检查伪造签名是否通过公钥验证。
 
 ## 四、部分实验代码
 
@@ -256,7 +256,43 @@ d\_leaked = (numerator \* pow(denominator, n-2, n)) % n  # 模逆运算
 
 基于两个签名的方程差，通过模逆运算求解私钥，直接验证$k$重用的危害。
 
-4.2.2不同用户使用相同k值导致私钥泄露
+#### 4.2.2不同用户使用相同k值导致私钥泄露
+```
+# 相同的消息和k值
+    M = b"Common message for both users"
+    k = random.randint(1, n - 1)
+
+    # 两个用户使用相同k值签名
+    r1, s1, _ = sm2_sign(d1, M, k)
+    r2, s2, _ = sm2_sign(d2, M, k)
+
+    print(f"用户1签名: (r={hex(r1)}, s={hex(s1)})")
+    print(f"用户2签名: (r={hex(r2)}, s={hex(s2)})")
+
+    # 验证签名
+    verify1 = sm2_verify(P1, M, (r1, s1))
+    verify2 = sm2_verify(P2, M, (r2, s2))
+    print(f"用户1签名验证结果: {verify1}")
+    print(f"用户2签名验证结果: {verify2}")
+
+```
+#### 4.2.3相同的d和k用于ECDSA和SM2导致私钥泄露
+
+```
+# 签名
+    r_sm2, s_sm2, _ = sm2_sign(d, M, k)
+    r_ecdsa, s_ecdsa, _ = ecdsa_sign(d, M, k)
+
+    print(f"SM2签名: (r={hex(r_sm2)}, s={hex(s_sm2)})")
+    print(f"ECDSA签名: (r={hex(r_ecdsa)}, s={hex(s_ecdsa)})")
+
+    # 验证签名
+    verify_sm2 = sm2_verify(P, M, (r_sm2, s_sm2))
+    verify_ecdsa = ecdsa_verify(P, M, (r_ecdsa, s_ecdsa))
+    print(f"SM2签名验证结果: {verify_sm2}")
+    print(f"ECDSA签名验证结果: {verify_ecdsa}")
+```
+
 
 ### 4.3 ECDSA 签名伪造
 
@@ -345,7 +381,7 @@ fake\_sig = generate\_ecdsa\_signature(p, a, n, G, d\_recovered, k\_recovered, f
 
 1.  T-Table 和高效标量乘法能显著降低 SM2 算法的计算开销，适合资源受限场景。
 
-2.  随机数$k$的安全管理是签名算法的核心，重用或预测k会直接导致私钥泄露，验证了 “密码学安全依赖于高质量随机数” 的原则。
+2.  随机数k的安全管理是签名算法的核心，重用或预测k会直接导致私钥泄露，验证了 “密码学安全依赖于高质量随机数” 的原则。
 
 ## 附录：
 
@@ -382,4 +418,3 @@ fake\_sig = generate\_ecdsa\_signature(p, a, n, G, d\_recovered, k\_recovered, f
 
     $d = \frac{s_1 k - e_1}{r} \pmod{n}$
 
-> （注：文档部分内容可能由 AI 生成）
